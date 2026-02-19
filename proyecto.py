@@ -2,10 +2,21 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
 from datetime import datetime
+from PIL import Image, ImageTk
+import os
+
+# ==============================
+# RUTA DEL LOGO (según tu carpeta)
+# ==============================
+
+ruta_base = os.path.dirname(__file__)          # proyecto1
+ruta_github = os.path.dirname(ruta_base)      # sube a GitHub
+ruta_logo = os.path.join(ruta_github, "logo.jpg")  # cambia a .png si es png
 
 # ==============================
 # BASE DE DATOS
 # ==============================
+
 def crear_bd():
     conexion = sqlite3.connect("finanzas.db")
     cursor = conexion.cursor()
@@ -50,10 +61,10 @@ def calcular_balance():
     conexion.close()
     return ingresos, gastos, ingresos - gastos
 
-
 # ==============================
 # FUNCIONES GUI
 # ==============================
+
 def guardar():
     tipo = combo_tipo.get()
     descripcion = entry_descripcion.get()
@@ -86,19 +97,31 @@ def mostrar_datos():
     label_gastos.config(text=f"Gastos: ${gastos:,.2f}")
     label_balance.config(text=f"Balance: ${balance:,.2f}")
 
-
 # ==============================
 # INTERFAZ
 # ==============================
+
 crear_bd()
 
 ventana = tk.Tk()
 ventana.title("Sistema de Finanzas Personales")
-ventana.geometry("700x550")
+ventana.geometry("700x600")
+
+# Cargar logo
+try:
+    imagen = Image.open(ruta_logo)
+    imagen = imagen.resize((120, 120))
+    logo_tk = ImageTk.PhotoImage(imagen)
+
+    label_logo = tk.Label(ventana, image=logo_tk)
+    label_logo.pack(pady=10)
+
+except:
+    print("No se encontró el logo")
 
 tk.Label(ventana, text="Sistema de Ingresos y Gastos", font=("Arial", 16)).pack(pady=10)
 
-# Frame formulario
+# Formulario
 frame_form = tk.Frame(ventana)
 frame_form.pack(pady=10)
 
@@ -119,14 +142,12 @@ tk.Button(ventana, text="Guardar Movimiento", command=guardar, bg="blue", fg="wh
 
 # Tabla
 tabla = ttk.Treeview(ventana, columns=("ID", "Tipo", "Descripción", "Monto", "Fecha"), show="headings")
-tabla.heading("ID", text="ID")
-tabla.heading("Tipo", text="Tipo")
-tabla.heading("Descripción", text="Descripción")
-tabla.heading("Monto", text="Monto")
-tabla.heading("Fecha", text="Fecha")
+for col in ("ID", "Tipo", "Descripción", "Monto", "Fecha"):
+    tabla.heading(col, text=col)
+
 tabla.pack(pady=10, fill="both", expand=True)
 
-# Resumen financiero
+# Resumen
 frame_resumen = tk.Frame(ventana)
 frame_resumen.pack(pady=10)
 
