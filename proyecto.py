@@ -6,12 +6,12 @@ from PIL import Image, ImageTk
 import os
 
 # ==============================
-# RUTA DEL LOGO (según tu carpeta)
+# RUTA DEL LOGO (según tu estructura)
 # ==============================
 
-ruta_base = os.path.dirname(__file__)          # proyecto1
-ruta_github = os.path.dirname(ruta_base)      # sube a GitHub
-ruta_logo = os.path.join(ruta_github, "logo.jpg")  # cambia a .png si es png
+ruta_base = os.path.dirname(__file__)        # proyecto1
+ruta_github = os.path.dirname(ruta_base)    # sube a GitHub
+ruta_logo = os.path.join(ruta_github, "logo.jpg")  # cambia a .png si es necesario
 
 # ==============================
 # BASE DE DATOS
@@ -51,6 +51,13 @@ def obtener_movimientos():
     conexion.close()
     return datos
 
+def eliminar_movimiento(id_movimiento):
+    conexion = sqlite3.connect("finanzas.db")
+    cursor = conexion.cursor()
+    cursor.execute("DELETE FROM movimientos WHERE id=?", (id_movimiento,))
+    conexion.commit()
+    conexion.close()
+
 def calcular_balance():
     conexion = sqlite3.connect("finanzas.db")
     cursor = conexion.cursor()
@@ -84,6 +91,21 @@ def guardar():
     except:
         messagebox.showerror("Error", "El monto debe ser numérico")
 
+def eliminar():
+    seleccionado = tabla.selection()
+
+    if not seleccionado:
+        messagebox.showwarning("Error", "Selecciona un registro para eliminar")
+        return
+
+    item = tabla.item(seleccionado)
+    id_movimiento = item["values"][0]
+
+    confirmar = messagebox.askyesno("Confirmar", "¿Seguro que deseas eliminar este movimiento?")
+    if confirmar:
+        eliminar_movimiento(id_movimiento)
+        mostrar_datos()
+
 def mostrar_datos():
     for row in tabla.get_children():
         tabla.delete(row)
@@ -105,9 +127,9 @@ crear_bd()
 
 ventana = tk.Tk()
 ventana.title("Sistema de Finanzas Personales")
-ventana.geometry("700x600")
+ventana.geometry("750x650")
 
-# Cargar logo
+# LOGO
 try:
     imagen = Image.open(ruta_logo)
     imagen = imagen.resize((120, 120))
@@ -116,10 +138,10 @@ try:
     label_logo = tk.Label(ventana, image=logo_tk)
     label_logo.pack(pady=10)
 
-except:
-    print("No se encontró el logo")
+except Exception as e:
+    print("No se pudo cargar el logo:", e)
 
-tk.Label(ventana, text="Sistema de Ingresos y Gastos", font=("Arial", 16)).pack(pady=10)
+tk.Label(ventana, text="Sistema de Ingresos y Gastos", font=("Arial", 16)).pack(pady=5)
 
 # Formulario
 frame_form = tk.Frame(ventana)
@@ -138,7 +160,8 @@ tk.Label(frame_form, text="Monto:").grid(row=2, column=0, padx=5, pady=5)
 entry_monto = tk.Entry(frame_form)
 entry_monto.grid(row=2, column=1, padx=5, pady=5)
 
-tk.Button(ventana, text="Guardar Movimiento", command=guardar, bg="blue", fg="white").pack(pady=10)
+tk.Button(ventana, text="Guardar Movimiento", command=guardar, bg="blue", fg="white").pack(pady=5)
+tk.Button(ventana, text="Eliminar Seleccionado", command=eliminar, bg="red", fg="white").pack(pady=5)
 
 # Tabla
 tabla = ttk.Treeview(ventana, columns=("ID", "Tipo", "Descripción", "Monto", "Fecha"), show="headings")
